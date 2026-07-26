@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Pacera</title>
+<meta name="description" content="What Pacera records, what stays on your device, and the three places data can go — and under what conditions.">
+<meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <a class="brand" href="index.html">Pacera<span class="brand-mark">.</span></a>
+  <nav class="nav">
+    <a href="index.html">Support</a>
+    <a href="privacy.html" aria-current="page">Privacy</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <p class="eyebrow">Privacy Policy</p>
+  <h1 class="title">Almost nothing leaves your phone.</h1>
+  <p class="standfirst">Pacera is a running and cycling app with an AI coach called Ara. This page describes exactly what the app records, where it is kept, and the only three places data can go.</p>
+  <p class="dateline">Effective July 26, 2026</p>
+
+  <h2>What leaves your device</h2>
+  <p>Pacera has no servers of its own. There is nowhere for us to store your data, so we don't. Three external services can receive something, each under a specific condition:</p>
+
+  <div class="ledger">
+    <div class="ledger-head">Destination · Condition · What is sent</div>
+
+    <div class="ledger-row">
+      <p class="ledger-dest">xAI <span class="pill pill-optin">Only with your key</span></p>
+      <p class="ledger-detail">When you talk to Ara <em>and</em> you have entered your own xAI API key in Settings, Pacera sends a compact summary of your live stats, the transcript of what you said, a simplified version of your route, and any athlete profile fields you filled in, to <code>api.x.ai</code> so Ara can answer. <strong>With no key entered, none of this is sent and Ara's conversation is simply unavailable.</strong> Remove the key at any time to stop these calls immediately.</p>
+    </div>
+
+    <div class="ledger-row">
+      <p class="ledger-dest">OSRM &amp; Open-Meteo <span class="pill pill-auto">Automatic while tracking</span></p>
+      <p class="ledger-detail">During a tracked activity, Pacera sends recent GPS coordinates to a public OSRM routing service to snap your route to roads and trails, and to Open-Meteo for current weather and terrain context. These requests contain only the coordinates needed to answer them — no name, no device identifier, nothing else about you.</p>
+    </div>
+
+    <div class="ledger-row">
+      <p class="ledger-dest">Strava <span class="pill pill-optin">Only if you connect it</span></p>
+      <p class="ledger-detail">If you connect a Strava account in Settings, Pacera sends the coordinates and metrics of the activities you choose to export, so they appear in your Strava account. Never connect it and nothing is sent.</p>
+    </div>
+
+    <p class="ledger-foot">No other party receives data from Pacera. No accounts. No analytics or advertising SDKs. No cross-app or cross-site tracking. Nothing sold or shared with data brokers.</p>
+  </div>
+
+  <h2>Location</h2>
+  <p>Pacera uses GPS to record pace, distance, route, elevation, and segments during a run or ride, including in the background while the screen is locked so tracking continues without keeping the app open.</p>
+  <ul>
+    <li>Pace, distance, and route calculations happen on your device.</li>
+    <li>Activities are saved on your device as GPX/TCX files and raw point data in the app's Documents directory. Those files are included in your device's normal backups, the same as any other app's data.</li>
+    <li>Your location history is never uploaded to us, because there is no server of ours to upload it to.</li>
+  </ul>
+
+  <h2>Heart rate, power, and sensors</h2>
+  <ul>
+    <li>Pacera connects to Bluetooth Low Energy sensors — heart-rate straps, power meters, cadence and gearing sensors — to record live metrics. Pacera only acts as a Bluetooth <em>central</em>: it connects to sensors and does not broadcast anything over Bluetooth.</li>
+    <li>With your permission, Pacera reads heart rate from Apple Health, including data synced from Apple Watch, so Ara can coach your effort and zones.</li>
+    <li>With your permission, Pacera writes a summary of finished workouts — type, duration, distance, calories, heart rate — back to Apple Health.</li>
+    <li>Health data stays inside Apple's HealthKit framework and Pacera's on-device storage. It is never sent to us or to a third party.</li>
+  </ul>
+
+  <h2>Microphone and speech</h2>
+  <ul>
+    <li>The microphone is accessed only while you are actively talking to Ara.</li>
+    <li>Speech is transcribed on-device or through Apple's speech recognition APIs so Ara can understand the request.</li>
+  </ul>
+
+  <h2>How long things are kept</h2>
+  <p>Activity files, your coaching transcripts with Ara, and your profile settings stay on your device until you delete that activity or conversation, or delete the app — which removes all of its data, per iOS convention.</p>
+  <p>We keep no copies, because we run no servers that store them. Anything sent to xAI, OSRM, Open-Meteo, or Strava is then subject to that provider's own retention practices; see their privacy policies for details.</p>
+
+  <h2>Your controls</h2>
+  <ul>
+    <li>Delete any individual activity or conversation log inside the app.</li>
+    <li>Remove your xAI API key to stop all calls to xAI immediately.</li>
+    <li>Disconnect Strava in Settings to stop future exports.</li>
+    <li>Revoke Location, Bluetooth, Microphone, Speech Recognition, or Health permission at any time in iOS Settings › Privacy &amp; Security.</li>
+    <li>Delete the app to remove everything stored locally.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>Pacera is not directed at children under 13, and we do not knowingly collect data from children under 13.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the effective date above is updated and, where it matters, we note what changed.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy or your data: <a href="mailto:jeffry.white@gmail.com">jeffry.white@gmail.com</a></p>
+</main>
+
+<footer class="foot">
+  <span>Pacera — run &amp; ride coaching</span>
+  <span><a href="index.html">Support</a> · <a href="privacy.html">Privacy</a></span>
+</footer>
+
+</body>
+</html>
