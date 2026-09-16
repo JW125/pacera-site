@@ -14,6 +14,7 @@
   <a class="brand" href="index.html">Pacera<span class="brand-mark">.</span></a>
   <nav class="nav">
     <a href="index.html">Support</a>
+    <a href="roads/">Roads</a>
     <a href="privacy.html" aria-current="page">Privacy</a>
   </nav>
 </header>
@@ -25,7 +26,7 @@
   <p class="dateline">Effective July 26, 2026</p>
 
   <h2>What leaves your device</h2>
-  <p>Pacera has no servers of its own. There is nowhere for us to store your data, so we don't. Three external services can receive something, each under a specific condition:</p>
+  <p>Pacera has no servers of its own. There is nowhere for us to store your data, so we don't. External services can receive something, each under a specific condition:</p>
 
   <div class="ledger">
     <div class="ledger-head">Destination · Condition · What is sent</div>
@@ -43,6 +44,11 @@
     <div class="ledger-row">
       <p class="ledger-dest">Strava <span class="pill pill-optin">Only if you connect it</span></p>
       <p class="ledger-detail">If you connect a Strava account in Settings, Pacera sends the coordinates and metrics of the activities you choose to export, so they appear in your Strava account. Never connect it and nothing is sent.</p>
+    </div>
+
+    <div class="ledger-row">
+      <p class="ledger-dest">GitHub Pages <span class="pill pill-optin">Road map token</span></p>
+      <p class="ledger-detail">If you paste a GitHub token in Settings → Road Sense, Pacera publishes anonymous pavement cells and jar pins (latitude, longitude, smoothness score, peak g) to the public <a href="roads/">Open tarmac</a> map. No name, no timestamps of the rider, no full GPS track. Leave the token empty and nothing is uploaded.</p>
     </div>
 
     <p class="ledger-foot">No other party receives data from Pacera. No accounts. No analytics or advertising SDKs. No cross-app or cross-site tracking. Nothing sold or shared with data brokers.</p>

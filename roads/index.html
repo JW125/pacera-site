@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open tarmac — Pacera</title>
+<meta name="description" content="Road feel from a bike: smoothness by cell, jars as pins. Not a GPS diary.">
+<meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root {
+    --asphalt: #141210;
+    --curb: #1e1b18;
+    --paint: #f5d76e;
+    --ink: #f4efe6;
+    --muted: #9a9186;
+    --smooth: #4aae8a;
+    --rough: #d94b3d;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--asphalt); color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  #map { position: absolute; inset: 0; background: #2a2723; }
+  .leaflet-tile-pane { filter: grayscale(1) contrast(1.18) brightness(0.68) sepia(0.22); }
+  .leaflet-control-attribution { background: rgba(20,18,16,.75) !important; color: var(--muted) !important;
+    font-family: ui-monospace, Menlo, monospace; font-size: 10px; }
+  .leaflet-control-attribution a { color: var(--paint) !important; }
+  #clip {
+    position: absolute; z-index: 1000; top: 16px; left: 16px; width: min(280px, calc(100vw - 32px));
+    background: var(--curb); color: var(--ink); padding: 18px 18px 16px;
+    border-left: 5px solid var(--paint); box-shadow: 6px 8px 0 rgba(0,0,0,.35);
+  }
+  h1 { margin: 0 0 4px; font-size: 1.55rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+  .sub { margin: 0 0 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--muted); }
+  p { margin: 0 0 12px; font-size: 0.92rem; line-height: 1.4; }
+  .legend { display: flex; height: 10px; border-radius: 0; overflow: hidden; margin: 8px 0 6px; }
+  .legend i { flex: 1; }
+  .key { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--muted);
+    display: flex; justify-content: space-between; }
+  #meta { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--paint); margin-top: 10px; }
+  #meta.err { color: var(--rough); }
+  nav { margin-top: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+  nav a { color: var(--paint); text-decoration: none; }
+  .jar-mark {
+    width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent;
+    border-bottom: 12px solid var(--rough); filter: drop-shadow(0 1px 0 #000);
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<aside id="clip">
+  <h1>Open tarmac</h1>
+  <p class="sub">Pacera road survey</p>
+  <p>Smoothness and jars from the bike, not a track of the rider. A cell is about ten metres of pavement. Stops and brake hits stay off the map.</p>
+  <div class="legend" aria-hidden="true">
+    <i style="background:#d94b3d"></i>
+    <i style="background:#e89b3c"></i>
+    <i style="background:#f5d76e"></i>
+    <i style="background:#7bc47f"></i>
+    <i style="background:#4aae8a"></i>
+  </div>
+  <div class="key"><span>broken</span><span>smooth</span></div>
+  <div id="meta">loading survey…</div>
+  <nav><a href="../index.html">Pacera support</a></nav>
+</aside>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const meta = document.getElementById('meta');
+  const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([40.7736, -73.9566], 13);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  function color(score) {
+    const s = Math.max(0, Math.min(1, score));
+    if (s >= 0.66) return '#4aae8a';
+    if (s >= 0.4) return '#f5d76e';
+    if (s >= 0.2) return '#e89b3c';
+    return '#d94b3d';
+  }
+
+  fetch('../roadsense-data.json', { cache: 'no-store' })
+    .then((r) => {
+      if (!r.ok) throw new Error('no survey file');
+      return r.json();
+    })
+    .then((data) => {
+      const cells = data.cells || [];
+      const jars = data.jars || [];
+      const pts = [];
+      for (const c of cells) {
+        const p = [c.lat, c.lon];
+        pts.push(p);
+        L.circleMarker(p, {
+          radius: 5,
+          color: color(c.score),
+          weight: 1,
+          fillColor: color(c.score),
+          fillOpacity: 0.85,
+        }).addTo(map).bindPopup(
+          `score ${Number(c.score).toFixed(2)} · ${c.n || 1} pass${c.n === 1 ? '' : 'es'}`
+        );
+      }
+      const icon = L.divIcon({ className: '', html: '<div class="jar-mark"></div>', iconSize: [14, 12], iconAnchor: [7, 12] });
+      for (const j of jars) {
+        const p = [j.lat, j.lon];
+        pts.push(p);
+        L.marker(p, { icon }).addTo(map).bindPopup(
+          `jar ${Number(j.peakDeltaG).toFixed(1)} g · seen ${j.n || 1}×`
+        );
+      }
+      if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 16 });
+      const when = data.updatedAt ? new Date(data.updatedAt).toLocaleString() : '—';
+      meta.textContent = cells.length
+        ? `${cells.length} cells · ${jars.length} jars · ${when}`
+        : 'No pavement scored yet. Ride with Pacera.';
+    })
+    .catch((e) => {
+      meta.textContent = 'Survey file missing.';
+      meta.className = 'err';
+      console.warn(e);
+    });
+</script>
+</body>
+</html>
