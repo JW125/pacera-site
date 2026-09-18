@@ -109,9 +109,9 @@
 
   // Continuous surface: every cell splats a soft kernel into a low-res grid,
   // colour = weighted mean score, opacity = accumulated weight, then upscaled smooth.
-  const SCALE = 2;
-  const SIGMA_M = 7;
-  const MIN_SIGMA_PX = 1.6;
+  const SCALE = 1;
+  const SIGMA_M = 3.5;
+  const MIN_SIGMA_PX = 1.1;
   const Surface = L.Layer.extend({
     initialize(cells) { this._cells = cells; },
     onAdd(m) {
