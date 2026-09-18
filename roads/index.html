@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Open tarmac — Pacera</title>
-<meta name="description" content="Road feel from a bike: smoothness by cell, jars as pins. Not a GPS diary.">
+<meta name="description" content="Road feel from a bike: smoothness as a continuous surface, jars as pins. Not a GPS diary.">
 <meta name="color-scheme" content="dark">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
@@ -14,8 +14,8 @@
     --paint: #f5d76e;
     --ink: #f4efe6;
     --muted: #9a9186;
-    --smooth: #4aae8a;
     --rough: #d94b3d;
+    --ramp: linear-gradient(90deg, #8e1b1b 0%, #d94b3d 20%, #e89b3c 40%, #8fcf7a 60%, #4aae8a 80%, #2f8f6f 100%);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--asphalt); color: var(--ink);
@@ -25,21 +25,31 @@
   .leaflet-control-attribution { background: rgba(20,18,16,.75) !important; color: var(--muted) !important;
     font-family: ui-monospace, Menlo, monospace; font-size: 10px; }
   .leaflet-control-attribution a { color: var(--paint) !important; }
+  canvas.surface { position: absolute; top: 0; left: 0; pointer-events: none; }
+
   #clip {
-    position: absolute; z-index: 1000; top: 16px; left: 16px; width: min(280px, calc(100vw - 32px));
-    background: var(--curb); color: var(--ink); padding: 18px 18px 16px;
-    border-left: 5px solid var(--paint); box-shadow: 6px 8px 0 rgba(0,0,0,.35);
+    position: absolute; z-index: 1000; top: 12px; left: 12px; max-width: min(300px, calc(100vw - 24px));
+    background: var(--curb); color: var(--ink); border-left: 4px solid var(--paint);
+    box-shadow: 0 4px 14px rgba(0,0,0,.4); overflow: hidden;
   }
-  h1 { margin: 0 0 4px; font-size: 1.55rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
-  .sub { margin: 0 0 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--muted); }
-  p { margin: 0 0 12px; font-size: 0.92rem; line-height: 1.4; }
-  .legend { display: flex; height: 10px; border-radius: 0; overflow: hidden; margin: 8px 0 6px; }
-  .legend i { flex: 1; }
-  .key { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--muted);
-    display: flex; justify-content: space-between; }
-  #meta { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--paint); margin-top: 10px; }
+  #toggle {
+    all: unset; box-sizing: border-box; cursor: pointer; width: 100%;
+    display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
+    padding: 9px 12px 8px;
+  }
+  #toggle:focus-visible { outline: 2px solid var(--paint); outline-offset: -2px; }
+  .ttl { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
+  .chev { grid-row: 1; grid-column: 2; font-size: 12px; color: var(--muted); transition: transform .15s; }
+  #meta { grid-column: 1 / -1; font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; color: var(--paint); margin-top: 2px; }
   #meta.err { color: var(--rough); }
-  nav { margin-top: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+  .strip { height: 4px; background: var(--ramp); }
+  #more { display: none; padding: 4px 14px 14px; }
+  #clip.open #more { display: block; }
+  #clip.open .chev { transform: rotate(180deg); }
+  #more p { margin: 8px 0 10px; font-size: 0.88rem; line-height: 1.4; }
+  .key { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--muted);
+    display: flex; justify-content: space-between; margin-top: 4px; }
+  nav { margin-top: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
   nav a { color: var(--paint); text-decoration: none; }
   .jar-mark {
     width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent;
@@ -50,36 +60,120 @@
 <body>
 <div id="map"></div>
 <aside id="clip">
-  <h1>Open tarmac</h1>
-  <p class="sub">Pacera road survey</p>
-  <p>Smoothness and jars from the bike, not a track of the rider. A cell is about ten metres of pavement. Stops and brake hits stay off the map.</p>
-  <div class="legend" aria-hidden="true">
-    <i style="background:#d94b3d"></i>
-    <i style="background:#e89b3c"></i>
-    <i style="background:#f5d76e"></i>
-    <i style="background:#7bc47f"></i>
-    <i style="background:#4aae8a"></i>
+  <button id="toggle" type="button" aria-expanded="false" aria-controls="more">
+    <span class="ttl">Open tarmac</span><span class="chev" aria-hidden="true">▾</span>
+    <span id="meta">loading survey…</span>
+  </button>
+  <div class="strip" aria-hidden="true"></div>
+  <div id="more">
+    <p>Smoothness and jars from the bike, not a track of the rider. Color is blended along the road; stops and brake hits stay off the map. Tap the road for its score.</p>
+    <div class="strip" aria-hidden="true"></div>
+    <div class="key"><span>broken</span><span>smooth</span></div>
+    <nav><a href="../index.html">Pacera support</a></nav>
   </div>
-  <div class="key"><span>broken</span><span>smooth</span></div>
-  <div id="meta">loading survey…</div>
-  <nav><a href="../index.html">Pacera support</a></nav>
 </aside>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   const meta = document.getElementById('meta');
-  const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([40.7736, -73.9566], 13);
+  const clip = document.getElementById('clip');
+  const toggle = document.getElementById('toggle');
+  toggle.addEventListener('click', () => {
+    const open = clip.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+
+  const map = L.map('map', { zoomControl: true, attributionControl: true, zoomAnimation: false })
+    .setView([40.7736, -73.9566], 13);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
 
-  function color(score) {
-    const s = Math.max(0, Math.min(1, score));
-    if (s >= 0.66) return '#4aae8a';
-    if (s >= 0.4) return '#f5d76e';
-    if (s >= 0.2) return '#e89b3c';
-    return '#d94b3d';
+  // Same stops as the app (SMOOTHNESS_STOPS in smoothness.ts).
+  const STOPS = [
+    [0, '#8e1b1b'], [0.2, '#d94b3d'], [0.4, '#e89b3c'],
+    [0.6, '#8fcf7a'], [0.8, '#4aae8a'], [1, '#2f8f6f'],
+  ];
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const LUT = new Uint8ClampedArray(256 * 3);
+  for (let i = 0; i < 256; i++) {
+    const s = i / 255;
+    let k = 1;
+    while (k < STOPS.length - 1 && s > STOPS[k][0]) k++;
+    const [s0, c0] = STOPS[k - 1];
+    const [s1, c1] = STOPS[k];
+    const t = Math.max(0, Math.min(1, (s - s0) / (s1 - s0)));
+    const a = rgb(c0), b = rgb(c1);
+    for (let c = 0; c < 3; c++) LUT[i * 3 + c] = a[c] + (b[c] - a[c]) * t;
   }
+
+  // Continuous surface: every cell splats a soft kernel into a low-res grid,
+  // colour = weighted mean score, opacity = accumulated weight, then upscaled smooth.
+  const SCALE = 2;
+  const SIGMA_M = 7;
+  const MIN_SIGMA_PX = 1.6;
+  const Surface = L.Layer.extend({
+    initialize(cells) { this._cells = cells; },
+    onAdd(m) {
+      this._canvas = L.DomUtil.create('canvas', 'surface');
+      m.getPanes().overlayPane.appendChild(this._canvas);
+      m.on('moveend resize', this._draw, this);
+      this._draw();
+    },
+    onRemove(m) {
+      m.off('moveend resize', this._draw, this);
+      this._canvas.remove();
+    },
+    _draw() {
+      const m = this._map;
+      const size = m.getSize();
+      const cv = this._canvas;
+      L.DomUtil.setPosition(cv, m.containerPointToLayerPoint([0, 0]));
+      cv.width = size.x; cv.height = size.y;
+      const w = Math.ceil(size.x / SCALE), h = Math.ceil(size.y / SCALE);
+      const wsum = new Float32Array(w * h), ssum = new Float32Array(w * h);
+      const lat = m.getCenter().lat;
+      const mpp = (156543.03 * Math.cos(lat * Math.PI / 180)) / Math.pow(2, m.getZoom());
+      const sigma = Math.max(MIN_SIGMA_PX, SIGMA_M / mpp / SCALE);
+      const R = Math.ceil(sigma * 2.5);
+      const inv = 1 / (2 * sigma * sigma);
+      for (const c of this._cells) {
+        const p = m.latLngToContainerPoint([c.lat, c.lon]);
+        const cx = p.x / SCALE, cy = p.y / SCALE;
+        if (cx < -R || cy < -R || cx > w + R || cy > h + R) continue;
+        const x0 = Math.max(0, Math.floor(cx - R)), x1 = Math.min(w - 1, Math.ceil(cx + R));
+        const y0 = Math.max(0, Math.floor(cy - R)), y1 = Math.min(h - 1, Math.ceil(cy + R));
+        for (let y = y0; y <= y1; y++) {
+          const dy = y - cy;
+          for (let x = x0; x <= x1; x++) {
+            const dx = x - cx;
+            const k = Math.exp(-(dx * dx + dy * dy) * inv);
+            const i = y * w + x;
+            wsum[i] += k;
+            ssum[i] += k * c.score;
+          }
+        }
+      }
+      const off = document.createElement('canvas');
+      off.width = w; off.height = h;
+      const octx = off.getContext('2d');
+      const img = octx.createImageData(w, h);
+      for (let i = 0; i < w * h; i++) {
+        const W = wsum[i];
+        if (W < 0.02) continue;
+        const idx = Math.max(0, Math.min(255, Math.round((ssum[i] / W) * 255))) * 3;
+        img.data[i * 4] = LUT[idx];
+        img.data[i * 4 + 1] = LUT[idx + 1];
+        img.data[i * 4 + 2] = LUT[idx + 2];
+        img.data[i * 4 + 3] = Math.round(255 * 0.92 * (1 - Math.exp(-W * 1.6)));
+      }
+      octx.putImageData(img, 0, 0);
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(off, 0, 0, w, h, 0, 0, size.x, size.y);
+    },
+  });
 
   fetch('../roadsense-data.json', { cache: 'no-store' })
     .then((r) => {
@@ -89,28 +183,32 @@
     .then((data) => {
       const cells = data.cells || [];
       const jars = data.jars || [];
-      const pts = [];
-      for (const c of cells) {
-        const p = [c.lat, c.lon];
-        pts.push(p);
-        L.circleMarker(p, {
-          radius: 5,
-          color: color(c.score),
-          weight: 1,
-          fillColor: color(c.score),
-          fillOpacity: 0.85,
-        }).addTo(map).bindPopup(
-          `score ${Number(c.score).toFixed(2)} · ${c.n || 1} pass${c.n === 1 ? '' : 'es'}`
-        );
-      }
+      const pts = cells.map((c) => [c.lat, c.lon]);
+      new Surface(cells).addTo(map);
+
       const icon = L.divIcon({ className: '', html: '<div class="jar-mark"></div>', iconSize: [14, 12], iconAnchor: [7, 12] });
       for (const j of jars) {
-        const p = [j.lat, j.lon];
-        pts.push(p);
-        L.marker(p, { icon }).addTo(map).bindPopup(
+        pts.push([j.lat, j.lon]);
+        L.marker([j.lat, j.lon], { icon }).addTo(map).bindPopup(
           `jar ${Number(j.peakDeltaG).toFixed(1)} g · seen ${j.n || 1}×`
         );
       }
+
+      map.on('click', (e) => {
+        const p0 = map.latLngToContainerPoint(e.latlng);
+        let best = null, bd = 18 * 18;
+        for (const c of cells) {
+          const p = map.latLngToContainerPoint([c.lat, c.lon]);
+          const d = (p.x - p0.x) ** 2 + (p.y - p0.y) ** 2;
+          if (d < bd) { bd = d; best = c; }
+        }
+        if (best) {
+          L.popup().setLatLng([best.lat, best.lon]).setContent(
+            `score ${Number(best.score).toFixed(2)} · ${best.n || 1} pass${best.n === 1 ? '' : 'es'}`
+          ).openOn(map);
+        }
+      });
+
       if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 16 });
       const when = data.updatedAt ? new Date(data.updatedAt).toLocaleString() : '—';
       meta.textContent = cells.length
